@@ -1,3 +1,4 @@
+import math
 import random
 
 import uvicorn
@@ -36,13 +37,33 @@ def paraphrase(tree: nltk.tree.Tree) -> None:
         paraphrase(element)
 
 
+def permutations_count(tree: nltk.tree.Tree, count: int = 1) -> int:
+    if tree.height() <= 3:
+        return count
+
+    if tree.label() == "NP":
+        counter = 0
+
+        for val in tree:
+            if val.label() == "NP":
+                counter += 1
+
+        if counter >= 2:
+            count *= math.factorial(counter)
+
+    for element in tree:
+        count = permutations_count(element, count)
+
+    return count
+
+
 @app.get("/paraphrase")
 def paraphrase_endpoint(tree: str, limit: int = 20):
     result = set()
-
     tree = nltk.tree.Tree.fromstring(tree)
+    max_count_permutation = min((permutations_count(tree), limit))
 
-    while len(result) < limit:
+    while len(result) < max_count_permutation:
         paraphrase(tree)
         result.add(" ".join(tree.leaves()))
 
