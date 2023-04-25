@@ -8,7 +8,13 @@ import nltk
 app = FastAPI()
 
 
-def paraphrase(tree: nltk.tree.Tree) -> None:
+def paraphrase_by_np(tree: nltk.tree.Tree) -> None:
+    """
+    This is a recursive function, that moves along the branches and shuffles the NPs.
+    Helps to find all possible permutations.
+    :param tree:
+    :return:
+    """
     if tree.height() <= 3:
         return
 
@@ -24,7 +30,7 @@ def paraphrase(tree: nltk.tree.Tree) -> None:
 
         if counter < 2:
             for element in tree:
-                paraphrase(element)
+                paraphrase_by_np(element)
         else:
             index = list(index_values_to_shuffle.keys())
             vals = list(index_values_to_shuffle.values())
@@ -34,10 +40,16 @@ def paraphrase(tree: nltk.tree.Tree) -> None:
                 tree[key] = val
 
     for element in tree:
-        paraphrase(element)
+        paraphrase_by_np(element)
 
 
 def permutations_count(tree: nltk.tree.Tree, count: int = 1) -> int:
+    """
+    This recursion function moving along the branches finds the count of all existing permutations.
+    :param tree:
+    :param count:
+    :return:
+    """
     if tree.height() <= 3:
         return count
 
@@ -57,17 +69,31 @@ def permutations_count(tree: nltk.tree.Tree, count: int = 1) -> int:
     return count
 
 
+def paraphrase(tree: str) -> list[str]:
+    """
+    This function finds all existing permutations of the current tree
+    :param tree:
+    :return:
+    """
+    tree = nltk.tree.Tree.fromstring(tree)
+    perm_count = permutations_count(tree)
+    all_permutations = set()
+
+    while len(all_permutations) < perm_count:
+        paraphrase_by_np(tree)
+        all_permutations.add(" ".join(str(tree).split()))
+
+    return list(all_permutations)
+
+
 @app.get("/paraphrase")
 def paraphrase_endpoint(tree: str, limit: int = 20):
-    result = set()
-    tree = nltk.tree.Tree.fromstring(tree)
-    max_count_permutation = min((permutations_count(tree), limit))
+    result = paraphrase(tree)[:limit]
 
-    while len(result) < max_count_permutation:
-        paraphrase(tree)
-        result.add(" ".join(tree.leaves()))
-
-    return {"status": 201, "response": result}
+    return {"status": 201, "paraphrases": [{
+        "tree": phrase,
+        "sentence": " ".join(nltk.tree.Tree.fromstring(phrase).leaves())
+    } for phrase in result]}
 
 
 if __name__ == "__main__":
