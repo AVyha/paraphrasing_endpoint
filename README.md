@@ -5,7 +5,7 @@ This endpoint rephrases your current sentence by switching the NP (noun phrase) 
 
 ## Installation
 ```
-git copy https://github.com/AVyha/paraphrasing_endpoint.git
+git clone https://github.com/AVyha/paraphrasing_endpoint.git
 python -m venv venv
 venv\Scripts\activate
 pip install -m requirements.txt
